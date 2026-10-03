@@ -1,0 +1,193 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  width: 100%;
+
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #eeeeee;
+
+  backdrop-filter: blur(12px);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: auto;
+
+  padding: 16px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* LOGO */
+
+.logo {
+  color: #18181b;
+  text-decoration: none;
+
+  font-size: 28px;
+  font-weight: 800;
+
+  letter-spacing: -1px;
+}
+
+.logo span {
+  color: #ff5a36;
+}
+
+/* NAVIGATION */
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  position: relative;
+
+  padding: 9px 14px;
+
+  color: #666;
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  border-radius: 9px;
+
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #ff5a36;
+  background: #fff4f0;
+}
+
+/* ACTIVE HOME */
+
+.nav-link.active {
+  color: #ff5a36;
+  background: #fff0eb;
+}
+
+.nav-link.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -17px;
+
+  transform: translateX(-50%);
+
+  width: 5px;
+  height: 5px;
+
+  background: #ff5a36;
+  border-radius: 50%;
+}
+
+/* ACTIONS */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-button,
+.cart-button {
+  width: 40px;
+  height: 40px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #f7f7f7;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+
+  position: relative;
+}
+
+.search-button:hover,
+.cart-button:hover {
+  background: #fff0eb;
+  transform: translateY(-1px);
+}
+
+/* CART BADGE */
+
+.cart-button span {
+  position: absolute;
+
+  top: -5px;
+  right: -5px;
+
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ff5a36;
+  color: white;
+
+  border-radius: 50%;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* LOGIN */
+
+.login-button {
+  border: none;
+
+  padding: 11px 20px;
+
+  border-radius: 10px;
+
+  background: #18181b;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.login-button:hover {
+  background: #ff5a36;
+  transform: translateY(-1px);
+}
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+  .nav-links {
+    display: none;
+  }
+
+  .navbar-container {
+    padding: 14px 16px;
+  }
+
+  .logo {
+    font-size: 24px;
+  }
+
+  .login-button {
+    padding: 10px 14px;
+  }
+}
