@@ -22,8 +22,6 @@
   justify-content: space-between;
 }
 
-/* LOGO */
-
 .logo {
   color: #18181b;
   text-decoration: none;
@@ -37,8 +35,6 @@
 .logo span {
   color: #ff5a36;
 }
-
-/* NAVIGATION */
 
 .nav-links {
   display: flex;
@@ -59,15 +55,13 @@
 
   border-radius: 9px;
 
-  transition: all 0.2s ease;
+  transition: 0.2s;
 }
 
 .nav-link:hover {
   color: #ff5a36;
   background: #fff4f0;
 }
-
-/* ACTIVE HOME */
 
 .nav-link.active {
   color: #ff5a36;
@@ -91,38 +85,59 @@
   border-radius: 50%;
 }
 
-/* ACTIONS */
-
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.search-button,
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  background: #f7f7f7;
+
+  border-radius: 10px;
+
+  padding: 0 12px;
+
+  height: 40px;
+}
+
+.search-box input {
+  width: 120px;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-size: 13px;
+}
+
 .cart-button {
   width: 40px;
   height: 40px;
 
-  border: none;
   border-radius: 10px;
 
   background: #f7f7f7;
 
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  transition: 0.2s;
+  text-decoration: none;
 
   position: relative;
+
+  transition: 0.2s;
 }
 
-.search-button:hover,
 .cart-button:hover {
   background: #fff0eb;
-  transform: translateY(-1px);
 }
-
-/* CART BADGE */
 
 .cart-button span {
   position: absolute;
@@ -146,8 +161,6 @@
   font-weight: 700;
 }
 
-/* LOGIN */
-
 .login-button {
   border: none;
 
@@ -168,26 +181,24 @@
 
 .login-button:hover {
   background: #ff5a36;
-  transform: translateY(-1px);
 }
 
-/* MOBILE */
-
-@media (max-width: 700px) {
-
+@media (max-width: 900px) {
   .nav-links {
     display: none;
   }
 
+  .search-box {
+    display: none;
+  }
+}
+
+@media (max-width: 500px) {
   .navbar-container {
     padding: 14px 16px;
   }
 
   .logo {
     font-size: 24px;
-  }
-
-  .login-button {
-    padding: 10px 14px;
   }
 }

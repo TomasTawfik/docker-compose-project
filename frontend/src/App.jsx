@@ -1,49 +1,216 @@
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import "./App.css";
 
-const products = [
-  {
-    name: "Classic Burger",
-    description: "Juicy beef burger with fresh vegetables and special sauce.",
-    price: "$8.99",
-    emoji: "🍔",
-  },
-  {
-    name: "Italian Pizza",
-    description: "Fresh pizza with tomato sauce, mozzarella and herbs.",
-    price: "$12.99",
-    emoji: "🍕",
-  },
-  {
-    name: "Crispy Chicken",
-    description: "Crispy chicken served with fresh vegetables and sauce.",
-    price: "$10.99",
-    emoji: "🍗",
-  },
-  {
-    name: "Chicken Sandwich",
-    description: "Grilled chicken with lettuce, tomato and special sauce.",
-    price: "$7.99",
-    emoji: "🥪",
-  },
-];
-
-const categories = [
-  { name: "Burgers", emoji: "🍔" },
-  { name: "Pizza", emoji: "🍕" },
-  { name: "Chicken", emoji: "🍗" },
-  { name: "Drinks", emoji: "🥤" },
-];
+const API_URL = import.meta.env.VITE_API_URL;
 
 function App() {
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const categories = [
+    { name: "Burgers", emoji: "🍔" },
+    { name: "Pizza", emoji: "🍕" },
+    { name: "Chicken", emoji: "🍗" },
+    { name: "Sandwiches", emoji: "🥪" },
+  ];
+
+  /* =========================
+     LOAD PRODUCTS
+  ========================= */
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams();
+
+      if (search) {
+        params.append("search", search);
+      }
+
+      if (category) {
+        params.append("category", category);
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/products?${params.toString()}`
+      );
+
+      const data = await response.json();
+
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to load products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================
+     LOAD CART
+  ========================= */
+
+  const loadCart = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cart`);
+
+      const data = await response.json();
+
+      setCart(data);
+    } catch (error) {
+      console.error("Failed to load cart:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+    loadCart();
+  }, []);
+
+  /* =========================
+     SEARCH
+  ========================= */
+
+  const handleSearch = (event) => {
+    setSearch(event.target.value);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadProducts();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search, category]);
+
+  /* =========================
+     CATEGORY
+  ========================= */
+
+  const handleCategory = (categoryName) => {
+    if (category === categoryName) {
+      setCategory("");
+    } else {
+      setCategory(categoryName);
+    }
+  };
+
+  /* =========================
+     ADD TO CART
+  ========================= */
+
+  const addToCart = async (productId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message);
+        return;
+      }
+
+      setCart(data.cart);
+    } catch (error) {
+      console.error("Failed to add product:", error);
+    }
+  };
+
+  /* =========================
+     REMOVE FROM CART
+  ========================= */
+
+  const removeFromCart = async (productId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/cart/${productId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      setCart(data.cart);
+    } catch (error) {
+      console.error("Failed to remove product:", error);
+    }
+  };
+
+  /* =========================
+     ORDER
+  ========================= */
+
+  const createOrder = async () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    const customerName = prompt("Enter your name:");
+
+    if (!customerName) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message);
+        return;
+      }
+
+      alert(
+        `Order #${data.id} created successfully! Total: $${data.total}`
+      );
+
+      setCart([]);
+    } catch (error) {
+      console.error("Failed to create order:", error);
+    }
+  };
+
   return (
     <div className="app">
-      <Navbar />
+      <Navbar
+        search={search}
+        setSearch={handleSearch}
+        cartCount={cart.reduce(
+          (total, item) => total + item.quantity,
+          0
+        )}
+      />
 
-      {/* Hero */}
+      {/* HERO */}
+
       <section className="hero-section">
         <div className="hero-content">
-          <span className="hero-badge">🔥 Fresh & Delicious</span>
+          <span className="hero-badge">
+            🔥 Fresh & Delicious
+          </span>
 
           <h1>
             Delicious food,
@@ -52,13 +219,32 @@ function App() {
           </h1>
 
           <p>
-            Discover your favorite meals from FoodHub and enjoy fast,
-            fresh delivery right to your door.
+            Discover your favorite meals from FoodHub and enjoy
+            fast, fresh delivery right to your door.
           </p>
 
           <div className="hero-buttons">
-            <button className="primary-button">Order Now</button>
-            <button className="secondary-button">Explore Menu</button>
+            <button
+              className="primary-button"
+              onClick={() =>
+                document
+                  .getElementById("products")
+                  .scrollIntoView({ behavior: "smooth" })
+              }
+            >
+              Order Now
+            </button>
+
+            <button
+              className="secondary-button"
+              onClick={() =>
+                document
+                  .getElementById("products")
+                  .scrollIntoView({ behavior: "smooth" })
+              }
+            >
+              Explore Menu
+            </button>
           </div>
 
           <div className="hero-stats">
@@ -94,7 +280,8 @@ function App() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* CATEGORIES */}
+
       <section className="section" id="categories">
         <div className="section-header">
           <div>
@@ -102,71 +289,189 @@ function App() {
             <h2>Browse Categories</h2>
           </div>
 
-          <a href="#products">View all →</a>
+          <button
+            className="clear-filter"
+            onClick={() => setCategory("")}
+          >
+            View all →
+          </button>
         </div>
 
         <div className="categories">
-          {categories.map((category) => (
-            <div className="category-card" key={category.name}>
-              <div className="category-icon">{category.emoji}</div>
-              <h3>{category.name}</h3>
+          {categories.map((item) => (
+            <button
+              className={`category-card ${
+                category === item.name ? "selected" : ""
+              }`}
+              key={item.name}
+              onClick={() => handleCategory(item.name)}
+            >
+              <div className="category-icon">
+                {item.emoji}
+              </div>
+
+              <h3>{item.name}</h3>
+
               <span>Explore →</span>
-            </div>
+            </button>
           ))}
         </div>
       </section>
 
-      {/* Products */}
-      <section className="section products-section" id="products">
+      {/* PRODUCTS */}
+
+      <section
+        className="section products-section"
+        id="products"
+      >
         <div className="section-header">
           <div>
-            <span className="section-label">OUR MENU</span>
+            <span className="section-label">
+              OUR MENU
+            </span>
+
             <h2>Popular Products</h2>
           </div>
 
-          <a href="#products">View all →</a>
+          <span>
+            {products.length} products
+          </span>
         </div>
 
-        <div className="products-grid">
-          {products.map((product) => (
-            <div className="product-card" key={product.name}>
-              <div className="product-image">
-                <span>{product.emoji}</span>
-                <button className="favorite">♡</button>
-              </div>
+        {loading ? (
+          <div className="loading">
+            Loading products...
+          </div>
+        ) : (
+          <div className="products-grid">
+            {products.map((product) => (
+              <div
+                className="product-card"
+                key={product.id}
+              >
+                <div className="product-image">
+                  <span>{product.image}</span>
 
-              <div className="product-info">
-                <div className="rating">★★★★★</div>
+                  <button className="favorite">
+                    ♡
+                  </button>
+                </div>
 
-                <h3>{product.name}</h3>
+                <div className="product-info">
+                  <div className="rating">
+                    ★★★★★
+                  </div>
 
-                <p>{product.description}</p>
+                  <h3>{product.name}</h3>
 
-                <div className="product-bottom">
-                  <strong>{product.price}</strong>
+                  <p>{product.description}</p>
 
-                  <button className="add-button">+</button>
+                  <div className="product-bottom">
+                    <strong>
+                      ${product.price.toFixed(2)}
+                    </strong>
+
+                    <button
+                      className="add-button"
+                      onClick={() =>
+                        addToCart(product.id)
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && products.length === 0 && (
+          <div className="empty">
+            No products found.
+          </div>
+        )}
+      </section>
+
+      {/* CART */}
+
+      <section className="cart-section" id="cart">
+        <div className="section">
+          <div className="section-header">
+            <div>
+              <span className="section-label">
+                YOUR ORDER
+              </span>
+
+              <h2>Shopping Cart</h2>
             </div>
-          ))}
+          </div>
+
+          {cart.length === 0 ? (
+            <div className="empty-cart">
+              🛒
+              <h3>Your cart is empty</h3>
+              <p>Add some delicious food to your cart.</p>
+            </div>
+          ) : (
+            <div className="cart-container">
+              {cart.map((item) => (
+                <div
+                  className="cart-item"
+                  key={item.productId}
+                >
+                  <div>
+                    <h3>{item.name}</h3>
+
+                    <p>
+                      ${item.price.toFixed(2)} ×{" "}
+                      {item.quantity}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      removeFromCart(item.productId)
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+
+              <button
+                className="primary-button checkout-button"
+                onClick={createOrder}
+              >
+                Place Order
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Why FoodHub */}
+      {/* WHY */}
+
       <section className="why-section">
         <div>
-          <span className="section-label">WHY FOODHUB?</span>
-          <h2>Everything you need for a great meal.</h2>
+          <span className="section-label">
+            WHY FOODHUB?
+          </span>
+
+          <h2>
+            Everything you need for a great meal.
+          </h2>
+
           <p>
-            We make ordering food simple, fast and convenient.
-            Choose your meal and let us take care of the rest.
+            We make ordering food simple, fast and
+            convenient.
           </p>
         </div>
 
         <div className="features">
           <div className="feature">
             <span>🚀</span>
+
             <div>
               <h3>Fast Delivery</h3>
               <p>Get your food delivered quickly.</p>
@@ -175,6 +480,7 @@ function App() {
 
           <div className="feature">
             <span>🥗</span>
+
             <div>
               <h3>Fresh Food</h3>
               <p>Quality ingredients in every meal.</p>
@@ -183,6 +489,7 @@ function App() {
 
           <div className="feature">
             <span>🔒</span>
+
             <div>
               <h3>Secure Ordering</h3>
               <p>Safe and simple ordering experience.</p>
@@ -191,6 +498,7 @@ function App() {
 
           <div className="feature">
             <span>💳</span>
+
             <div>
               <h3>Easy Payment</h3>
               <p>Simple and convenient checkout.</p>
@@ -199,18 +507,33 @@ function App() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* FOOTER */}
+
       <footer>
         <div className="footer-brand">
-          <h2>Food<span>Hub</span></h2>
-          <p>Your favorite food, delivered.</p>
+          <h2>
+            Food<span>Hub</span>
+          </h2>
+
+          <p>
+            Your favorite food, delivered.
+          </p>
         </div>
 
         <div className="footer-links">
           <a href="/">Home</a>
-          <a href="#products">Products</a>
-          <a href="#products">Categories</a>
-          <a href="/">Contact</a>
+
+          <a href="#products">
+            Products
+          </a>
+
+          <a href="#categories">
+            Categories
+          </a>
+
+          <a href="#cart">
+            Cart
+          </a>
         </div>
 
         <p className="copyright">

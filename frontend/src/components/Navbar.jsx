@@ -1,6 +1,10 @@
 import "./Navbar.css";
 
-function Navbar() {
+function Navbar({
+  search,
+  setSearch,
+  cartCount,
+}) {
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -10,31 +14,59 @@ function Navbar() {
         </a>
 
         <div className="nav-links">
-          <a href="/" className="nav-link active">
+          <a
+            href="/"
+            className="nav-link active"
+          >
             Home
           </a>
 
-          <a href="#products" className="nav-link">
+          <a
+            href="#products"
+            className="nav-link"
+          >
             Products
           </a>
 
-          <a href="#categories" className="nav-link">
+          <a
+            href="#categories"
+            className="nav-link"
+          >
             Categories
           </a>
         </div>
 
         <div className="nav-actions">
 
-          <button className="search-button" title="Search">
-            🔍
-          </button>
+          <div className="search-box">
+            <span>🔍</span>
 
-          <button className="cart-button" title="Shopping Cart">
+            <input
+              type="text"
+              placeholder="Search food..."
+              value={search}
+              onChange={setSearch}
+            />
+          </div>
+
+          <a
+            href="#cart"
+            className="cart-button"
+            title="Shopping Cart"
+          >
             🛒
-            <span>2</span>
-          </button>
 
-          <button className="login-button">
+            {cartCount > 0 && (
+              <span>{cartCount}</span>
+            )}
+          </a>
+
+          <button
+            className="login-button"
+            onClick={() =>
+              alert("Login will be connected next.")
+            }
+          >
             Login
           </button>
 
