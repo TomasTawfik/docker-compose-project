@@ -1,0 +1,142 @@
+.checkout-page {
+  min-height: 100vh;
+  background: #fff;
+  padding: 50px 20px 80px;
+}
+
+.checkout-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.back-button {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 40px;
+  padding: 0;
+}
+
+.checkout-header {
+  margin-bottom: 40px;
+}
+
+.checkout-header p {
+  color: #ff5a36;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.checkout-header h1 {
+  font-size: 42px;
+  margin: 0 0 10px;
+}
+
+.checkout-header span {
+  color: #777;
+  font-size: 16px;
+}
+
+.checkout-content {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.checkout-form,
+.order-summary {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.checkout-form h2,
+.order-summary h2 {
+  margin-top: 0;
+  margin-bottom: 25px;
+}
+
+.checkout-form label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.checkout-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 20px;
+}
+
+.checkout-form input:focus {
+  border-color: #ff5a36;
+}
+
+.confirm-order-button {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 15px;
+  background: #ff5a36;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-order-button:hover {
+  background: #e94d2c;
+}
+
+.confirm-order-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.summary-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.summary-item span {
+  color: #777;
+  font-size: 14px;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 25px;
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .checkout-content {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-header h1 {
+    font-size: 32px;
+  }
+}

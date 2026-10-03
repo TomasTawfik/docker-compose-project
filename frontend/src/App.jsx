@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
+import Checkout from "./components/Checkout";
+import OrderSuccess from "./components/OrderSuccess";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -10,6 +12,10 @@ function App() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Page navigation
+  const [page, setPage] = useState("home");
+  const [completedOrder, setCompletedOrder] = useState(null);
 
   const categories = [
     { name: "Burgers", emoji: "🍔" },
@@ -42,6 +48,11 @@ function App() {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        console.error("Failed to load products:", data);
+        return;
+      }
+
       setProducts(data);
     } catch (error) {
       console.error("Failed to load products:", error);
@@ -60,24 +71,28 @@ function App() {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        console.error("Failed to load cart:", data);
+        return;
+      }
+
       setCart(data);
     } catch (error) {
       console.error("Failed to load cart:", error);
     }
   };
 
+  /* =========================
+     INITIAL LOAD
+  ========================= */
+
   useEffect(() => {
-    loadProducts();
     loadCart();
   }, []);
 
   /* =========================
-     SEARCH
+     SEARCH + CATEGORY
   ========================= */
-
-  const handleSearch = (event) => {
-    setSearch(event.target.value);
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -86,6 +101,14 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [search, category]);
+
+  /* =========================
+     SEARCH
+  ========================= */
+
+  const handleSearch = (event) => {
+    setSearch(event.target.value);
+  };
 
   /* =========================
      CATEGORY
@@ -143,6 +166,11 @@ function App() {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        alert(data.message);
+        return;
+      }
+
       setCart(data.cart);
     } catch (error) {
       console.error("Failed to remove product:", error);
@@ -150,48 +178,51 @@ function App() {
   };
 
   /* =========================
-     ORDER
+     GO TO PRODUCTS
   ========================= */
 
-  const createOrder = async () => {
-    if (cart.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
-
-    const customerName = prompt("Enter your name:");
-
-    if (!customerName) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customerName,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.message);
-        return;
-      }
-
-      alert(
-        `Order #${data.id} created successfully! Total: $${data.total}`
-      );
-
-      setCart([]);
-    } catch (error) {
-      console.error("Failed to create order:", error);
-    }
+  const goToProducts = () => {
+    document
+      .getElementById("products")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
+
+  /* =========================
+     CHECKOUT PAGE
+  ========================= */
+
+  if (page === "checkout") {
+    return (
+      <Checkout
+        cart={cart}
+        onBack={() => setPage("home")}
+        onOrderSuccess={(order) => {
+          setCompletedOrder(order);
+          setCart([]);
+          setPage("success");
+        }}
+      />
+    );
+  }
+
+  /* =========================
+     ORDER SUCCESS PAGE
+  ========================= */
+
+  if (page === "success") {
+    return (
+      <OrderSuccess
+        order={completedOrder}
+        onContinue={() => {
+          setPage("home");
+        }}
+      />
+    );
+  }
+
+  /* =========================
+     HOME PAGE
+  ========================= */
 
   return (
     <div className="app">
@@ -204,7 +235,9 @@ function App() {
         )}
       />
 
-      {/* HERO */}
+      {/* =========================
+          HERO
+      ========================= */}
 
       <section className="hero-section">
         <div className="hero-content">
@@ -226,22 +259,14 @@ function App() {
           <div className="hero-buttons">
             <button
               className="primary-button"
-              onClick={() =>
-                document
-                  .getElementById("products")
-                  .scrollIntoView({ behavior: "smooth" })
-              }
+              onClick={goToProducts}
             >
               Order Now
             </button>
 
             <button
               className="secondary-button"
-              onClick={() =>
-                document
-                  .getElementById("products")
-                  .scrollIntoView({ behavior: "smooth" })
-              }
+              onClick={goToProducts}
             >
               Explore Menu
             </button>
@@ -280,12 +305,17 @@ function App() {
         </div>
       </section>
 
-      {/* CATEGORIES */}
+      {/* =========================
+          CATEGORIES
+      ========================= */}
 
       <section className="section" id="categories">
         <div className="section-header">
           <div>
-            <span className="section-label">EXPLORE</span>
+            <span className="section-label">
+              EXPLORE
+            </span>
+
             <h2>Browse Categories</h2>
           </div>
 
@@ -318,7 +348,9 @@ function App() {
         </div>
       </section>
 
-      {/* PRODUCTS */}
+      {/* =========================
+          PRODUCTS
+      ========================= */}
 
       <section
         className="section products-section"
@@ -352,7 +384,15 @@ function App() {
                 <div className="product-image">
                   <span>{product.image}</span>
 
-                  <button className="favorite">
+                  <button
+                    className="favorite"
+                    type="button"
+                    onClick={() =>
+                      alert(
+                        "Favorites will be connected later."
+                      )
+                    }
+                  >
                     ♡
                   </button>
                 </div>
@@ -393,9 +433,14 @@ function App() {
         )}
       </section>
 
-      {/* CART */}
+      {/* =========================
+          CART
+      ========================= */}
 
-      <section className="cart-section" id="cart">
+      <section
+        className="cart-section"
+        id="cart"
+      >
         <div className="section">
           <div className="section-header">
             <div>
@@ -410,8 +455,12 @@ function App() {
           {cart.length === 0 ? (
             <div className="empty-cart">
               🛒
+
               <h3>Your cart is empty</h3>
-              <p>Add some delicious food to your cart.</p>
+
+              <p>
+                Add some delicious food to your cart.
+              </p>
             </div>
           ) : (
             <div className="cart-container">
@@ -441,7 +490,7 @@ function App() {
 
               <button
                 className="primary-button checkout-button"
-                onClick={createOrder}
+                onClick={() => setPage("checkout")}
               >
                 Place Order
               </button>
@@ -450,7 +499,9 @@ function App() {
         </div>
       </section>
 
-      {/* WHY */}
+      {/* =========================
+          WHY FOODHUB
+      ========================= */}
 
       <section className="why-section">
         <div>
@@ -474,7 +525,9 @@ function App() {
 
             <div>
               <h3>Fast Delivery</h3>
-              <p>Get your food delivered quickly.</p>
+              <p>
+                Get your food delivered quickly.
+              </p>
             </div>
           </div>
 
@@ -483,7 +536,9 @@ function App() {
 
             <div>
               <h3>Fresh Food</h3>
-              <p>Quality ingredients in every meal.</p>
+              <p>
+                Quality ingredients in every meal.
+              </p>
             </div>
           </div>
 
@@ -492,7 +547,9 @@ function App() {
 
             <div>
               <h3>Secure Ordering</h3>
-              <p>Safe and simple ordering experience.</p>
+              <p>
+                Safe and simple ordering experience.
+              </p>
             </div>
           </div>
 
@@ -501,13 +558,17 @@ function App() {
 
             <div>
               <h3>Easy Payment</h3>
-              <p>Simple and convenient checkout.</p>
+              <p>
+                Simple and convenient checkout.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* =========================
+          FOOTER
+      ========================= */}
 
       <footer>
         <div className="footer-brand">
