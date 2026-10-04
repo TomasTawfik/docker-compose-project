@@ -53,7 +53,14 @@ function App() {
         return;
       }
 
-      setProducts(data);
+      setProducts(
+        Array.isArray(data)
+          ? data.map((product) => ({
+              ...product,
+              price: Number(product.price),
+            }))
+          : []
+      );
     } catch (error) {
       console.error("Failed to load products:", error);
     } finally {
@@ -76,7 +83,14 @@ function App() {
         return;
       }
 
-      setCart(data);
+      setCart(
+        Array.isArray(data)
+          ? data.map((item) => ({
+              ...item,
+              price: Number(item.price),
+            }))
+          : []
+      );
     } catch (error) {
       console.error("Failed to load cart:", error);
     }
@@ -145,7 +159,14 @@ function App() {
         return;
       }
 
-      setCart(data.cart);
+      setCart(
+        Array.isArray(data.cart)
+          ? data.cart.map((item) => ({
+              ...item,
+              price: Number(item.price),
+            }))
+          : []
+      );
     } catch (error) {
       console.error("Failed to add product:", error);
     }
@@ -171,7 +192,14 @@ function App() {
         return;
       }
 
-      setCart(data.cart);
+      setCart(
+        Array.isArray(data.cart)
+          ? data.cart.map((item) => ({
+              ...item,
+              price: Number(item.price),
+            }))
+          : []
+      );
     } catch (error) {
       console.error("Failed to remove product:", error);
     }
@@ -408,7 +436,7 @@ function App() {
 
                   <div className="product-bottom">
                     <strong>
-                      ${product.price.toFixed(2)}
+                      ${Number(product.price).toFixed(2)}
                     </strong>
 
                     <button
@@ -473,7 +501,7 @@ function App() {
                     <h3>{item.name}</h3>
 
                     <p>
-                      ${item.price.toFixed(2)} ×{" "}
+                      ${Number(item.price).toFixed(2)} ×{" "}
                       {item.quantity}
                     </p>
                   </div>
@@ -525,6 +553,7 @@ function App() {
 
             <div>
               <h3>Fast Delivery</h3>
+
               <p>
                 Get your food delivered quickly.
               </p>
@@ -536,6 +565,7 @@ function App() {
 
             <div>
               <h3>Fresh Food</h3>
+
               <p>
                 Quality ingredients in every meal.
               </p>
@@ -547,6 +577,7 @@ function App() {
 
             <div>
               <h3>Secure Ordering</h3>
+
               <p>
                 Safe and simple ordering experience.
               </p>
@@ -558,6 +589,7 @@ function App() {
 
             <div>
               <h3>Easy Payment</h3>
+
               <p>
                 Simple and convenient checkout.
               </p>

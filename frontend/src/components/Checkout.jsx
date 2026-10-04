@@ -8,7 +8,7 @@ function Checkout({ cart, onBack, onOrderSuccess }) {
   const [loading, setLoading] = useState(false);
 
   const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + Number(item.price) * item.quantity,
     0
   );
 
@@ -93,12 +93,12 @@ function Checkout({ cart, onBack, onOrderSuccess }) {
                 <div>
                   <strong>{item.name}</strong>
                   <span>
-                    {item.quantity} × ${item.price.toFixed(2)}
+                    {item.quantity} × ${Number(item.price).toFixed(2)}
                   </span>
                 </div>
 
                 <strong>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ${(Number(item.price) * item.quantity).toFixed(2)}
                 </strong>
               </div>
             ))}
