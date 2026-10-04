@@ -183,6 +183,16 @@
   background: #ff5a36;
 }
 
+.navbar-user {
+  max-width: 160px;
+  overflow: hidden;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .nav-links {
     display: none;

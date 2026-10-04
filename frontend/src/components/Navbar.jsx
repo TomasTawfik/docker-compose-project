@@ -4,6 +4,9 @@ function Navbar({
   search,
   setSearch,
   cartCount,
+  user,
+  onLogin,
+  onLogout,
 }) {
   return (
     <nav className="navbar">
@@ -61,14 +64,18 @@ function Navbar({
             )}
           </a>
 
-          <button
-            className="login-button"
-            onClick={() =>
-              alert("Login will be connected next.")
-            }
-          >
-            Login
-          </button>
+          {user ? (
+            <>
+              <span className="navbar-user">{user.name || user.email}</span>
+              <button className="login-button" onClick={onLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <button className="login-button" onClick={onLogin}>
+              Login
+            </button>
+          )}
 
         </div>
 

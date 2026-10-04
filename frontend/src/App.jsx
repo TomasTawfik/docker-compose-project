@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Checkout from "./components/Checkout";
 import OrderSuccess from "./components/OrderSuccess";
+import AuthPage from "./components/AuthPage";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -16,6 +17,10 @@ function App() {
   // Page navigation
   const [page, setPage] = useState("home");
   const [completedOrder, setCompletedOrder] = useState(null);
+  const [authToken, setAuthToken] = useState(
+    () => localStorage.getItem("foodhub_token")
+  );
+  const [authUser, setAuthUser] = useState(null);
 
   const categories = [
     { name: "Burgers", emoji: "🍔" },
@@ -24,96 +29,138 @@ function App() {
     { name: "Sandwiches", emoji: "🥪" },
   ];
 
-  /* =========================
-     LOAD PRODUCTS
-  ========================= */
+  useEffect(() => {
+    let active = true;
 
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
+    const loadCart = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/cart`);
+        const data = await response.json();
 
-      const params = new URLSearchParams();
+        if (!response.ok) {
+          console.error("Failed to load cart:", data);
+          return;
+        }
 
-      if (search) {
-        params.append("search", search);
+        if (active) {
+          setCart(
+            Array.isArray(data)
+              ? data.map((item) => ({
+                  ...item,
+                  price: Number(item.price),
+                }))
+              : []
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load cart:", error);
       }
+    };
 
-      if (category) {
-        params.append("category", category);
-      }
+    const timer = setTimeout(loadCart, 0);
 
-      const response = await fetch(
-        `${API_URL}/api/products?${params.toString()}`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("Failed to load products:", data);
-        return;
-      }
-
-      setProducts(
-        Array.isArray(data)
-          ? data.map((product) => ({
-              ...product,
-              price: Number(product.price),
-            }))
-          : []
-      );
-    } catch (error) {
-      console.error("Failed to load products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* =========================
-     LOAD CART
-  ========================= */
-
-  const loadCart = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/cart`);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("Failed to load cart:", data);
-        return;
-      }
-
-      setCart(
-        Array.isArray(data)
-          ? data.map((item) => ({
-              ...item,
-              price: Number(item.price),
-            }))
-          : []
-      );
-    } catch (error) {
-      console.error("Failed to load cart:", error);
-    }
-  };
-
-  /* =========================
-     INITIAL LOAD
-  ========================= */
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
-    loadCart();
-  }, []);
+    if (!authToken) {
+      return undefined;
+    }
+
+    let active = true;
+
+    const loadAuthenticatedUser = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "Session expired");
+        }
+
+        if (active) {
+          setAuthUser(data.user);
+        }
+      } catch (error) {
+        console.error("Failed to restore session:", error);
+
+        if (active) {
+          localStorage.removeItem("foodhub_token");
+          setAuthToken(null);
+          setAuthUser(null);
+        }
+      }
+    };
+
+    loadAuthenticatedUser();
+
+    return () => {
+      active = false;
+    };
+  }, [authToken]);
 
   /* =========================
      SEARCH + CATEGORY
   ========================= */
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadProducts();
+    let active = true;
+
+    const timer = setTimeout(async () => {
+      try {
+        setLoading(true);
+
+        const params = new URLSearchParams();
+
+        if (search) {
+          params.append("search", search);
+        }
+
+        if (category) {
+          params.append("category", category);
+        }
+
+        const response = await fetch(
+          `${API_URL}/api/products?${params.toString()}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Failed to load products:", data);
+          return;
+        }
+
+        if (active) {
+          setProducts(
+            Array.isArray(data)
+              ? data.map((product) => ({
+                  ...product,
+                  price: Number(product.price),
+                }))
+              : []
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [search, category]);
 
   /* =========================
@@ -205,6 +252,20 @@ function App() {
     }
   };
 
+  const handleAuthenticated = ({ accessToken, user }) => {
+    localStorage.setItem("foodhub_token", accessToken);
+    setAuthToken(accessToken);
+    setAuthUser(user);
+    setPage("home");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("foodhub_token");
+    setAuthToken(null);
+    setAuthUser(null);
+    setPage("home");
+  };
+
   /* =========================
      GO TO PRODUCTS
   ========================= */
@@ -223,12 +284,23 @@ function App() {
     return (
       <Checkout
         cart={cart}
+        authToken={authToken}
         onBack={() => setPage("home")}
         onOrderSuccess={(order) => {
           setCompletedOrder(order);
           setCart([]);
           setPage("success");
         }}
+      />
+    );
+  }
+
+  if (page === "login" || page === "register") {
+    return (
+      <AuthPage
+        initialMode={page}
+        onBack={() => setPage("home")}
+        onAuthenticated={handleAuthenticated}
       />
     );
   }
@@ -257,6 +329,9 @@ function App() {
       <Navbar
         search={search}
         setSearch={handleSearch}
+        user={authUser}
+        onLogin={() => setPage("login")}
+        onLogout={handleLogout}
         cartCount={cart.reduce(
           (total, item) => total + item.quantity,
           0
@@ -410,7 +485,11 @@ function App() {
                 key={product.id}
               >
                 <div className="product-image">
-                  <span>{product.image}</span>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    loading="lazy"
+                  />
 
                   <button
                     className="favorite"
@@ -518,7 +597,9 @@ function App() {
 
               <button
                 className="primary-button checkout-button"
-                onClick={() => setPage("checkout")}
+                onClick={() =>
+                  setPage(authUser ? "checkout" : "login")
+                }
               >
                 Place Order
               </button>

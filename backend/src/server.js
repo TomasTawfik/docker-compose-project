@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 
 const pool = require("./db");
+const authMiddleware = require("./middleware/authMiddleware");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 
@@ -9,6 +11,7 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 
 /* =========================
    HEALTH
@@ -335,7 +338,7 @@ app.delete("/api/cart/:productId", async (req, res) => {
 ========================= */
 
 // CREATE ORDER
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", authMiddleware, async (req, res) => {
   const client = await pool.connect();
 
   try {
@@ -387,9 +390,9 @@ app.post("/api/orders", async (req, res) => {
     const orderResult = await client.query(
       `
       INSERT INTO orders
-        (customer_name, total, status)
+        (user_id, customer_name, total, status)
       VALUES
-        ($1, $2, 'pending')
+        ($1, $2, $3, 'pending')
       RETURNING
         id,
         customer_name AS "customerName",
@@ -398,6 +401,7 @@ app.post("/api/orders", async (req, res) => {
         created_at AS "createdAt"
       `,
       [
+        req.user.id,
         customerName.trim(),
         total.toFixed(2),
       ]
@@ -473,7 +477,7 @@ app.post("/api/orders", async (req, res) => {
 });
 
 // GET ORDERS
-app.get("/api/orders", async (req, res) => {
+app.get("/api/orders", authMiddleware, async (req, res) => {
   try {
     const ordersResult = await pool.query(
       `
@@ -484,8 +488,10 @@ app.get("/api/orders", async (req, res) => {
         status,
         created_at AS "createdAt"
       FROM orders
+      WHERE user_id = $1
       ORDER BY created_at DESC
-      `
+      `,
+      [req.user.id]
     );
 
     const orders = [];
