@@ -13,6 +13,14 @@ function App() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("foodhub_favorites") || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Page navigation
   const [page, setPage] = useState("home");
@@ -28,6 +36,10 @@ function App() {
     { name: "Chicken", emoji: "🍗" },
     { name: "Sandwiches", emoji: "🥪" },
   ];
+
+  useEffect(() => {
+    localStorage.setItem("foodhub_favorites", JSON.stringify(favorites));
+  }, [favorites]);
 
   useEffect(() => {
     let active = true;
@@ -183,12 +195,28 @@ function App() {
      CATEGORY
   ========================= */
 
+  const scrollToProducts = () => {
+    document
+      .getElementById("products")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const handleCategory = (categoryName) => {
     if (category === categoryName) {
       setCategory("");
     } else {
       setCategory(categoryName);
     }
+
+    setTimeout(scrollToProducts, 80);
+  };
+
+  const toggleFavorite = (productId) => {
+    setFavorites((currentFavorites) =>
+      currentFavorites.includes(productId)
+        ? currentFavorites.filter((id) => id !== productId)
+        : [...currentFavorites, productId]
+    );
   };
 
   /* =========================
@@ -273,6 +301,32 @@ function App() {
     }
   };
 
+  const updateCartQuantity = async (productId, direction) => {
+    const currentItem = cart.find((item) => item.productId === productId);
+
+    if (!currentItem) {
+      return;
+    }
+
+    if (direction === "increase") {
+      await addToCart(productId);
+      return;
+    }
+
+    const nextQuantity = currentItem.quantity - 1;
+
+    if (nextQuantity <= 0) {
+      await removeFromCart(productId);
+      return;
+    }
+
+    await removeFromCart(productId);
+
+    for (let index = 0; index < nextQuantity; index += 1) {
+      await addToCart(productId);
+    }
+  };
+
   const handleAuthenticated = ({ accessToken, user }) => {
     localStorage.setItem("foodhub_token", accessToken);
     setAuthToken(accessToken);
@@ -286,6 +340,13 @@ function App() {
     setAuthUser(null);
     setPage("home");
   };
+
+  const cartSubtotal = cart.reduce(
+    (sum, item) => sum + Number(item.price) * item.quantity,
+    0
+  );
+  const deliveryFee = cart.length > 0 ? 4.99 : 0;
+  const cartTotal = cartSubtotal + deliveryFee;
 
   /* =========================
      GO TO PRODUCTS
@@ -445,7 +506,10 @@ function App() {
 
           <button
             className="clear-filter"
-            onClick={() => setCategory("")}
+            onClick={() => {
+              setCategory("");
+              setTimeout(scrollToProducts, 80);
+            }}
           >
             View all →
           </button>
@@ -513,15 +577,18 @@ function App() {
                   />
 
                   <button
-                    className="favorite"
+                    className={`favorite ${
+                      favorites.includes(product.id) ? "active" : ""
+                    }`}
                     type="button"
-                    onClick={() =>
-                      alert(
-                        "Favorites will be connected later."
-                      )
+                    onClick={() => toggleFavorite(product.id)}
+                    aria-label={
+                      favorites.includes(product.id)
+                        ? "Remove from favorites"
+                        : "Add to favorites"
                     }
                   >
-                    ♡
+                    {favorites.includes(product.id) ? "♥" : "♡"}
                   </button>
                 </div>
 
@@ -582,39 +649,103 @@ function App() {
 
           {cart.length === 0 ? (
             <div className="empty-cart">
-              🛒
+              <div className="empty-cart-icon">🛒</div>
 
               <h3>Your cart is empty</h3>
 
-              <p>
-                Add some delicious food to your cart.
-              </p>
+              <p>Add some delicious food to your cart.</p>
+
+              <button
+                className="primary-button"
+                onClick={scrollToProducts}
+              >
+                Browse Products
+              </button>
             </div>
           ) : (
             <div className="cart-container">
-              {cart.map((item) => (
-                <div
-                  className="cart-item"
-                  key={item.productId}
-                >
-                  <div>
-                    <h3>{item.name}</h3>
+              <div className="cart-items">
+                {cart.map((item) => {
+                  const productInfo = products.find(
+                    (product) => product.id === item.productId
+                  );
 
-                    <p>
-                      ${Number(item.price).toFixed(2)} ×{" "}
-                      {item.quantity}
-                    </p>
-                  </div>
+                  return (
+                    <div
+                      className="cart-item"
+                      key={item.productId}
+                    >
+                      <div className="cart-item-main">
+                        <div className="cart-item-image-wrap">
+                          <img
+                            src={productInfo?.image || "/images/placeholder.jpg"}
+                            alt={item.name}
+                          />
+                        </div>
 
-                  <button
-                    onClick={() =>
-                      removeFromCart(item.productId)
-                    }
-                  >
-                    Remove
-                  </button>
+                        <div className="cart-item-details">
+                          <h3>{item.name}</h3>
+                          <p className="unit-price">
+                            ${Number(item.price).toFixed(2)} each
+                          </p>
+
+                          <div className="quantity-control">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCartQuantity(item.productId, "decrease")
+                              }
+                              aria-label={`Decrease quantity for ${item.name}`}
+                            >
+                              −
+                            </button>
+                            <span>{item.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCartQuantity(item.productId, "increase")
+                              }
+                              aria-label={`Increase quantity for ${item.name}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="cart-item-actions">
+                        <strong>
+                          ${(Number(item.price) * item.quantity).toFixed(2)}
+                        </strong>
+
+                        <button
+                          className="remove-button"
+                          onClick={() => removeFromCart(item.productId)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="order-summary-box">
+                <div className="summary-row">
+                  <span>Subtotal</span>
+                  <strong>${cartSubtotal.toFixed(2)}</strong>
                 </div>
-              ))}
+
+                <div className="summary-row">
+                  <span>Delivery</span>
+                  <strong>${deliveryFee.toFixed(2)}</strong>
+                </div>
+
+                <div className="summary-row total-row">
+                  <span>Total</span>
+                  <strong>${cartTotal.toFixed(2)}</strong>
+                </div>
+              </div>
 
               <button
                 className="primary-button checkout-button"
