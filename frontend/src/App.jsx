@@ -37,6 +37,21 @@ function App() {
     { name: "Sandwiches", emoji: "🥪" },
   ];
 
+  const customerReviews = [
+    {
+      name: "Maya T.",
+      text: "FoodHub made dinner feel effortless. The burger was hot, fresh, and exactly on time.",
+    },
+    {
+      name: "Lucas R.",
+      text: "The ordering experience is smooth and the food quality is consistently excellent.",
+    },
+    {
+      name: "Alicia M.",
+      text: "Fast delivery, tasty meals, and a clean checkout flow. I always come back here.",
+    },
+  ];
+
   useEffect(() => {
     localStorage.setItem("foodhub_favorites", JSON.stringify(favorites));
   }, [favorites]);
@@ -347,6 +362,7 @@ function App() {
   );
   const deliveryFee = cart.length > 0 ? 4.99 : 0;
   const cartTotal = cartSubtotal + deliveryFee;
+  const featuredProducts = products.slice(0, 4);
 
   /* =========================
      GO TO PRODUCTS
@@ -476,17 +492,11 @@ function App() {
         </div>
 
         <div className="hero-food">
-          <div className="food-circle">
-            <span>🍔</span>
-          </div>
-
-          <div className="floating-card card-one">
-            ⭐ 4.9 Rating
-          </div>
-
-          <div className="floating-card card-two">
-            🚀 Fast Delivery
-          </div>
+          <img
+            src="/images/burger.jpg"
+            alt="Delicious burger and fries"
+            className="hero-food-image"
+          />
         </div>
       </section>
 
@@ -550,7 +560,7 @@ function App() {
               OUR MENU
             </span>
 
-            <h2>Popular Products</h2>
+            <h2>Best Sellers</h2>
           </div>
 
           <span>
@@ -563,10 +573,10 @@ function App() {
             Loading products...
           </div>
         ) : (
-          <div className="products-grid">
-            {products.map((product) => (
+          <div className="products-grid featured-products-grid">
+            {(featuredProducts.length > 0 ? featuredProducts : products).map((product) => (
               <div
-                className="product-card"
+                className="product-card reveal-card"
                 key={product.id}
               >
                 <div className="product-image">
@@ -760,74 +770,35 @@ function App() {
         </div>
       </section>
 
-      {/* =========================
-          WHY FOODHUB
-      ========================= */}
-
-      <section className="why-section">
-        <div>
-          <span className="section-label">
-            WHY FOODHUB?
-          </span>
-
-          <h2>
-            Everything you need for a great meal.
-          </h2>
-
-          <p>
-            We make ordering food simple, fast and
-            convenient.
-          </p>
+      <section className="reviews-section section">
+        <div className="section-header reviews-header">
+          <div>
+            <span className="section-label">TESTIMONIALS</span>
+            <h2>Customer Reviews</h2>
+          </div>
         </div>
 
-        <div className="features">
-          <div className="feature">
-            <span>🚀</span>
-
-            <div>
-              <h3>Fast Delivery</h3>
-
-              <p>
-                Get your food delivered quickly.
-              </p>
+        <div className="reviews-grid">
+          {customerReviews.map((review) => (
+            <div className="review-card reveal-card" key={review.name}>
+              <div className="review-stars">★★★★★</div>
+              <p>“{review.text}”</p>
+              <div className="review-author">
+                <span className="review-avatar">{review.name.charAt(0)}</span>
+                <strong>{review.name}</strong>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="feature">
-            <span>🥗</span>
-
-            <div>
-              <h3>Fresh Food</h3>
-
-              <p>
-                Quality ingredients in every meal.
-              </p>
-            </div>
-          </div>
-
-          <div className="feature">
-            <span>🔒</span>
-
-            <div>
-              <h3>Secure Ordering</h3>
-
-              <p>
-                Safe and simple ordering experience.
-              </p>
-            </div>
-          </div>
-
-          <div className="feature">
-            <span>💳</span>
-
-            <div>
-              <h3>Easy Payment</h3>
-
-              <p>
-                Simple and convenient checkout.
-              </p>
-            </div>
-          </div>
+      <section className="cta-section">
+        <div className="cta-content">
+          <span className="section-label">READY TO ORDER?</span>
+          <h2>Discover delicious food and get it delivered.</h2>
+          <button className="primary-button" onClick={goToProducts}>
+            Explore Menu
+          </button>
         </div>
       </section>
 

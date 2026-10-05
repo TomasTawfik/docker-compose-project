@@ -33,7 +33,7 @@ a {
   padding: 90px 24px 80px;
 
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 1fr;
   align-items: center;
   gap: 60px;
 }
@@ -128,63 +128,101 @@ a {
 }
 
 /* HERO FOOD */
-
 .hero-food {
-  min-height: 430px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  position: relative;
+  width: min(100%, 520px);
+  aspect-ratio: 1.15;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
-.food-circle {
-  width: 360px;
-  height: 360px;
-
-  border-radius: 50%;
-
-  background: linear-gradient(
-    135deg,
-    #ff7a59,
-    #ff4d2e
-  );
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-shadow: 0 30px 70px rgba(255, 90, 54, 0.25);
+.hero-food-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.food-circle span {
-  font-size: 170px;
-  filter: drop-shadow(0 20px 15px rgba(0, 0, 0, 0.15));
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 
-.floating-card {
-  position: absolute;
-
+.review-card {
   background: white;
-  padding: 13px 18px;
-
-  border-radius: 14px;
-
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 22px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.04);
+  padding: 24px;
 }
 
-.card-one {
-  top: 70px;
-  right: 30px;
+.review-stars {
+  color: #ffb000;
+  letter-spacing: 0.12em;
+  margin-bottom: 16px;
 }
 
-.card-two {
-  bottom: 70px;
-  left: 20px;
+.review-card p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.review-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.review-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff5a36, #ff8f5a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+}
+
+.cta-section {
+  max-width: 1200px;
+  margin: 20px auto 70px;
+  padding: 0 24px;
+}
+
+.cta-content {
+  background: linear-gradient(135deg, #18181b, #2a2a2d 50%, #1f2937);
+  color: white;
+  border-radius: 28px;
+  padding: 52px 32px;
+  text-align: center;
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+}
+
+.cta-content h2 {
+  margin: 12px auto 18px;
+  max-width: 620px;
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: -0.05em;
+}
+
+.reveal-card {
+  animation: fadeUp 0.65s ease both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* GENERAL SECTIONS */
@@ -210,8 +248,7 @@ a {
   letter-spacing: 2px;
 }
 
-.section-header h2,
-.why-section h2 {
+.section-header h2 {
   font-size: 38px;
   margin: 8px 0 0;
   letter-spacing: -1px;
@@ -383,61 +420,6 @@ a {
   cursor: pointer;
 }
 
-/* WHY FOODHUB */
-
-.why-section {
-  max-width: 1200px;
-  margin: 70px auto;
-
-  padding: 70px 50px;
-
-  background: #18181b;
-  color: white;
-
-  border-radius: 30px;
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 70px;
-}
-
-.why-section h2 {
-  font-size: 42px;
-  max-width: 500px;
-}
-
-.why-section > div:first-child p {
-  color: #a1a1aa;
-  line-height: 1.7;
-  max-width: 450px;
-}
-
-.features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
-}
-
-.feature {
-  display: flex;
-  gap: 15px;
-}
-
-.feature > span {
-  font-size: 30px;
-}
-
-.feature h3 {
-  margin: 0 0 5px;
-}
-
-.feature p {
-  margin: 0;
-  color: #a1a1aa;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
 /* FOOTER */
 
 footer {
@@ -503,14 +485,10 @@ footer {
     justify-content: center;
   }
 
+  .reviews-grid,
   .categories,
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .why-section {
-    grid-template-columns: 1fr;
-    margin: 40px 20px;
   }
 
   footer {
@@ -528,22 +506,14 @@ footer {
     font-size: 45px;
   }
 
-  .food-circle {
-    width: 280px;
-    height: 280px;
-  }
-
-  .food-circle span {
-    font-size: 120px;
-  }
-
+  .reviews-grid,
   .categories,
   .products-grid {
     grid-template-columns: 1fr;
   }
 
-  .features {
-    grid-template-columns: 1fr;
+  .cta-content {
+    padding: 42px 22px;
   }
 
   .section-header {
