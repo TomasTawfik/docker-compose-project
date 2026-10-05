@@ -34,7 +34,15 @@ function App() {
 
     const loadCart = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/cart`);
+        const headers = {};
+
+        if (authToken) {
+          headers.Authorization = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch(`${API_URL}/api/cart`, {
+          headers,
+        });
         const data = await response.json();
 
         if (!response.ok) {
@@ -63,7 +71,7 @@ function App() {
       active = false;
       clearTimeout(timer);
     };
-  }, []);
+  }, [authToken]);
 
   useEffect(() => {
     if (!authToken) {
@@ -189,11 +197,17 @@ function App() {
 
   const addToCart = async (productId) => {
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(`${API_URL}/api/cart`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           productId,
         }),
@@ -225,10 +239,17 @@ function App() {
 
   const removeFromCart = async (productId) => {
     try {
+      const headers = {};
+
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(
         `${API_URL}/api/cart/${productId}`,
         {
           method: "DELETE",
+          headers,
         }
       );
 

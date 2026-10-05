@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 
 const pool = require("./db");
 const authMiddleware = require("./middleware/authMiddleware");
@@ -122,6 +123,41 @@ app.get("/api/products/:id", async (req, res) => {
    CART
 ========================= */
 
+function getCartIdForUser(userId) {
+  if (userId == null) {
+    return getGuestCart();
+  }
+
+  return getUserCart(userId);
+}
+
+async function getUserCart(userId) {
+  const existingCart = await pool.query(
+    `
+    SELECT id
+    FROM carts
+    WHERE user_id = $1
+    LIMIT 1
+    `,
+    [userId]
+  );
+
+  if (existingCart.rows.length > 0) {
+    return existingCart.rows[0].id;
+  }
+
+  const newCart = await pool.query(
+    `
+    INSERT INTO carts (user_id)
+    VALUES ($1)
+    RETURNING id
+    `,
+    [userId]
+  );
+
+  return newCart.rows[0].id;
+}
+
 // For now we use a temporary guest cart.
 // Later this will be connected to the authenticated user.
 // CREATE GUEST CART IF IT DOES NOT EXIST
@@ -130,6 +166,7 @@ async function getGuestCart() {
     `
     SELECT id
     FROM carts
+    WHERE user_id IS NULL
     ORDER BY id
     LIMIT 1
     `,
@@ -141,8 +178,8 @@ async function getGuestCart() {
 
   const newCart = await pool.query(
     `
-    INSERT INTO carts
-    DEFAULT VALUES
+    INSERT INTO carts (user_id)
+    VALUES (NULL)
     RETURNING id
     `,
   );
@@ -150,10 +187,28 @@ async function getGuestCart() {
   return newCart.rows[0].id;
 }
 
+function getAuthenticatedUserId(req) {
+  const authorization = req.get("authorization") || "";
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  try {
+    const payload = jwt.verify(match[1], process.env.JWT_SECRET);
+    const userId = Number(payload.sub);
+
+    return Number.isInteger(userId) ? userId : null;
+  } catch {
+    return null;
+  }
+}
+
 // GET CART
 app.get("/api/cart", async (req, res) => {
   try {
-    const cartId = await getGuestCart();
+    const cartId = await getCartIdForUser(getAuthenticatedUserId(req));
 
     const result = await pool.query(
       `
@@ -219,7 +274,7 @@ app.post("/api/cart", async (req, res) => {
 
     await client.query("BEGIN");
 
-    const cartId = await getGuestCart();
+    const cartId = await getCartIdForUser(getAuthenticatedUserId(req));
 
     const existingItem = await client.query(
       `
@@ -293,7 +348,7 @@ app.delete("/api/cart/:productId", async (req, res) => {
   try {
     const productId = Number(req.params.productId);
 
-    const cartId = await getGuestCart();
+    const cartId = await getCartIdForUser(getAuthenticatedUserId(req));
 
     await pool.query(
       `
@@ -352,7 +407,7 @@ app.post("/api/orders", authMiddleware, async (req, res) => {
 
     await client.query("BEGIN");
 
-    const cartId = await getGuestCart();
+    const cartId = await getCartIdForUser(req.user.id);
 
     // Get cart items
     const cartResult = await client.query(
